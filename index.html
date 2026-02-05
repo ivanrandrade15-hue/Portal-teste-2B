@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Portal 2B - Desenvolvimento de Sistemas</title>
+
+<style>
+* {
+  box-sizing: border-box;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+body {
+  margin: 0;
+  background: linear-gradient(135deg,#020617,#0f172a);
+  color: #fff;
+}
+
+.hidden { display: none; }
+
+header {
+  background: #020617;
+  padding: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+button {
+  border: none;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.logout { background: #ef4444; color:#fff; }
+
+.container {
+  max-width: 1000px;
+  margin: auto;
+  padding: 20px;
+}
+
+.card {
+  background: #1e293b;
+  padding: 20px;
+  border-radius: 14px;
+  margin-bottom: 20px;
+}
+
+input, textarea {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  margin: 5px 0;
+}
+
+.add { background:#22c55e; color:#fff; }
+
+.project {
+  background:#334155;
+  padding:15px;
+  border-radius:10px;
+  margin-top:10px;
+}
+
+.project img {
+  width:100%;
+  border-radius:10px;
+  margin-top:10px;
+}
+
+.tag {
+  font-size:12px;
+  opacity:0.7;
+}
+
+/* LOGIN */
+.login {
+  height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+
+.login-box {
+  background:#1e293b;
+  padding:30px;
+  border-radius:14px;
+  width:320px;
+  text-align:center;
+}
+</style>
+</head>
+
+<body>
+
+<!-- LOGIN -->
+<div class="login" id="login">
+  <div class="login-box">
+    <h2>Portal 2B</h2>
+
+    <input id="name" placeholder="Nome">
+    <input id="ra" placeholder="RA">
+
+    <input id="user" placeholder="Usuário (professor)">
+    <input id="pass" type="password" placeholder="Senha">
+
+    <button onclick="login()">Entrar</button>
+  </div>
+</div>
+
+<!-- PORTAL -->
+<div id="portal" class="hidden">
+
+<header>
+  <h3 id="welcome"></h3>
+  <button class="logout" onclick="logout()">Sair</button>
+</header>
+
+<div class="container">
+
+  <!-- ADD PROJECT -->
+  <div class="card" id="addProject">
+    <h2>Adicionar Projeto</h2>
+    <input id="pname" placeholder="Nome do projeto">
+    <textarea id="pdesc" placeholder="Descrição"></textarea>
+    <input id="plink" placeholder="Link GitHub / Site">
+    <input id="pimg" placeholder="Link da imagem (opcional)">
+    <button class="add" onclick="addProject()">Publicar</button>
+  </div>
+
+  <!-- PROJECTS -->
+  <div class="card">
+    <h2>Projetos da Turma 🚀</h2>
+    <div id="projects"></div>
+  </div>
+
+</div>
+</div>
+
+<script>
+let user = null;
+let role = "aluno";
+
+function login() {
+  const nome = name.value;
+  const raVal = ra.value;
+
+  // Professor
+  if (user.value === "professor" && pass.value === "2BDEV") {
+    role = "professor";
+    user = { nome: "Professor", ra: "ADMIN" };
+  } else {
+    if (!nome || !raVal) return alert("Preencha Nome e RA");
+    user = { nome, ra: raVal };
+  }
+
+  localStorage.setItem("user2B", JSON.stringify({ user, role }));
+
+  showPortal();
+}
+
+function logout() {
+  localStorage.removeItem("user2B");
+  location.reload();
+}
+
+function showPortal() {
+  login.classList.add("hidden");
+  portal.classList.remove("hidden");
+  welcome.innerText = `Bem-vindo, ${user.nome} (${role})`;
+
+  if (role === "professor") {
+    addProject.style.display = "none";
+  }
+
+  loadProjects();
+}
+
+function addProject() {
+  if (role !== "aluno") return;
+
+  const projects = JSON.parse(localStorage.getItem("projects2B")) || [];
+
+  projects.push({
+    nome: pname.value,
+    desc: pdesc.value,
+    link: plink.value,
+    img: pimg.value,
+    aluno: user.nome,
+    ra: user.ra
+  });
+
+  localStorage.setItem("projects2B", JSON.stringify(projects));
+  pname.value = pdesc.value = plink.value = pimg.value = "";
+  loadProjects();
+}
+
+function loadProjects() {
+  projects.innerHTML = "";
+  const list = JSON.parse(localStorage.getItem("projects2B")) || [];
+
+  list.forEach(p => {
+    projects.innerHTML += `
+      <div class="project">
+        <h3>${p.nome}</h3>
+        <p>${p.desc}</p>
+        ${p.img ? `<img src="${p.img}">` : ""}
+        ${p.link ? `<a href="${p.link}" target="_blank">Ver projeto</a>` : ""}
+        <p class="tag">Aluno: ${p.aluno} | RA: ${p.ra}</p>
+      </div>
+    `;
+  });
+}
+
+// AUTO LOGIN
+const saved = JSON.parse(localStorage.getItem("user2B"));
+if (saved) {
+  user = saved.user;
+  role = saved.role;
+  showPortal();
+}
+</script>
+
+</body>
+</html>
